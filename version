@@ -1,0 +1,14 @@
+{
+  "version": 3.31,
+  "show_feature": true,
+  "new_feature": "We found a bug in the automatic update module.
+   This update may require you to manually download the new version of the program 
+   from Github and overwrite it <-> ChatGLM plus thread lock to improve concurrency stability
+    <-> support NewBing
+     <-> Markdown translation function supports direct input of Readme files URL 
+    <-> save dialogue function
+     <-> interpret any language code + ask any LLM combination at the same time 
+     <-> add networking (Google) answering question plug-in 
+     <-> fix ChatGLM context BUG 
+     <-> add support for Tsinghua ChatGLM"
+}

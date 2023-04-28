@@ -1,12 +1,11 @@
 class DummyWith():
     """
-    这段代码定义了一个名为DummyWith的空上下文管理器，
-    它的作用是……额……就是不起作用，即在代码结构不变得情况下取代其他的上下文管理器。
-    上下文管理器是一种Python对象，用于与with语句一起使用，
-    以确保一些资源在代码块执行期间得到正确的初始化和清理。
-    上下文管理器必须实现两个方法，分别为 __enter__()和 __exit__()。
-    在上下文执行开始的情况下，__enter__()方法会在代码块被执行前被调用，
-    而在上下文执行结束时，__exit__()方法则会被调用。
+    This code defines an empty context manager called DummyWith,
+     A context manager is a Python object intended for use with the with statement,
+     to ensure that some resources are properly initialized and cleaned up during code block execution.
+     A context manager must implement two methods, __enter__() and __exit__().
+     In the case where context execution starts, the __enter__() method is called before the code block is executed,
+     At the end of context execution, the __exit__() method will be called.
     """
     def __enter__(self):
         return self
@@ -16,7 +15,7 @@ class DummyWith():
 
 def run_gradio_in_subpath(demo, auth, port, custom_path):
     """
-    把gradio的运行地址更改到指定的二次路径上
+    Change the running address of gradio to the specified secondary path
     """
     def is_path_legal(path: str)->bool:
         '''
