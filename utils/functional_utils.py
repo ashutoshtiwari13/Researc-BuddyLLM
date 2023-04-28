@@ -104,10 +104,49 @@ def HotReload(func):
         yield from func_hot_reload(*args,**kwargs)
     return reDesign    
 
+def find_free_port():
+    """
+    Return unused ports in the system 
+    """
+    import socket
+    from contextlib import closing
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(('', 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return s.getsockname()[1]
 
 
+@lru_cache(maxsize=128)
+def read_single_conf_with_lru_cache(arg):
+    # from colorful import print_red, print_green, print_blue
+    #try for a config_private.py to keep all authentication details private
+    try:
+        r = getattr(importlib.import_module('config_private'), arg)
+    except:
+        r = getattr(importlib.import_module('config'), arg)
+    
+    if arg == 'API_KEY':
+        print(f"[API_KEY] This project now supports the api-key of OpenAI and API2D. It also supports filling in multiple api-keys at the same time, such as API_KEY=\"openai-key1,openai-key2,api2d-key3\"")
+        print(f"[API_KEY] You can either modify the api-key(s) in config.py, or enter a temporary api-key(s) in the question input area, and press Enter to submit it to take effect.")
+        if is_any_api_key(r):
+            print(f"[API_KEY] Your API_KEY is: {r[:15]}*** API_KEY imported successfully")
+        else:
+            print( "[API_KEY] The correct API_KEY is a 51-bit key starting with 'sk' (OpenAI), or a 41-bit key starting with 'fk', please modify the API key in the config file before running.")
+    if arg == 'proxies':
+        if r is None:
+            print('[PROXY] Network Proxy Status：Not configured. Check whether the USE_PROXY is modified')
+        else:
+            print('[PROXY] Network Proxy status: Configured. The configuration information is as follows ', r)
+            assert isinstance(r, dict), 'The format of the proxies is incorrect, Please recheck'
+    return r
 
 
+def get_conf(*args):
+    res = []
+    for arg in args:
+        r = read_single_conf_with_lru_cache(arg)
+        res.append(r)
+    return res
 
 
 
