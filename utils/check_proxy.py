@@ -135,7 +135,7 @@ def auto_update():
 
 def warm_up_modules():
     print('Performing warmup of some modules...')
-    from core_llm.bridge_all import model_info
+    from core_llm.bridge_all_llm import model_info
     enc = model_info["gpt-3.5-turbo"]['tokenizer']
     enc.encode("Module preheating", disallowed_special=())
     enc = model_info["gpt-4"]['tokenizer']

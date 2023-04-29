@@ -310,7 +310,7 @@ def clip_history(inputs, history, tokenizer, max_token_limit):
     until the number of token of history is reduced under threshold.
     """
     import numpy as np
-    from request_llm.bridge_all import model_info
+    from request_llm.bridge_all_llm import model_info
     def get_token_num(txt): 
         return len(tokenizer.encode(txt, disallowed_special=()))
     input_token_num = get_token_num(inputs)
@@ -347,3 +347,18 @@ def clip_history(inputs, history, tokenizer, max_token_limit):
 
     history = everything[1:]
     return history
+
+class DummyWith():
+    """
+    This code defines an empty context manager called DummyWith,
+     A context manager is a Python object intended for use with the with statement,
+     to ensure that some resources are properly initialized and cleaned up during code block execution.
+     A context manager must implement two methods, __enter__() and __exit__().
+     In the case where context execution starts, the __enter__() method is called before the code block is executed,
+     At the end of context execution, the __exit__() method will be called.
+    """
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return

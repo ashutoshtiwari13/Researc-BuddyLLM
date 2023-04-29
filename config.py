@@ -22,8 +22,8 @@ WEB_PORT = -1
 
 MAX_RETRY = 2
 
-LLM_MODEL = "gpt-3.5-turbo" # 可选 ↓↓↓
-AVAIL_LLM_MODELS = ["gpt-3.5-turbo", "api2d-gpt-3.5-turbo", "gpt-4", "api2d-gpt-4", "chatglm", "newbing"]
+LLM_MODEL = "gpt-3.5-turbo"
+AVAIL_LLM_MODELS = ["gpt-3.5-turbo", "gpt-4"]
 
 
 LOCAL_MODEL_DEVICE = "cpu" 

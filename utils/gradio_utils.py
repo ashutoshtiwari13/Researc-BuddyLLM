@@ -1,17 +1,3 @@
-class DummyWith():
-    """
-    This code defines an empty context manager called DummyWith,
-     A context manager is a Python object intended for use with the with statement,
-     to ensure that some resources are properly initialized and cleaned up during code block execution.
-     A context manager must implement two methods, __enter__() and __exit__().
-     In the case where context execution starts, the __enter__() method is called before the code block is executed,
-     At the end of context execution, the __exit__() method will be called.
-    """
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        return
 
 def run_gradio_in_subpath(demo, auth, port, custom_path):
     """

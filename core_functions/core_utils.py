@@ -2,7 +2,7 @@ from utils.functional_utils import updateUI, get_conf, trimmed_format_exc
 
 def input_clipping(inputs, history, max_token_limit):
     import numpy as np
-    from _llm.bridge_all import model_info
+    from _llm.bridge_all_llm import model_info
     enc = model_info["gpt-3.5-turbo"]['tokenizer']
     def get_token_num(txt): return len(enc.encode(txt, disallowed_special=()))
 
@@ -61,7 +61,7 @@ def request_gpt_model_in_new_thread_with_ui_alive(
     """
     import time
     from concurrent.futures import ThreadPoolExecutor
-    from core_llm.bridge_all import predict_no_ui_long_connection
+    from core_llm.bridge_all_llm import predict_no_ui_long_connection
     # Customer feedback
     chatbot.append([inputs_show_user, ""])
     yield from updateUI(chatbot=chatbot, history=[]) # Refresh interface
@@ -167,7 +167,7 @@ def request_gpt_model_multi_threads_with_very_awesome_ui_and_high_efficiency(
     """
     import time, random
     from concurrent.futures import ThreadPoolExecutor
-    from request_llm.bridge_all import predict_no_ui_long_connection
+    from request_llm.bridge_all_llm import predict_no_ui_long_connection
     assert len(inputs_array) == len(history_array)
     assert len(inputs_array) == len(sys_prompt_array)
     if max_workers == -1: # read configuration file
