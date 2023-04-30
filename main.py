@@ -66,7 +66,7 @@ def main():
                 chatbot.style(height = CHATBOT_HEIGHT)
                 history = gr.State([])
             with gr_L2(scale=1):
-                with gr.Accordion("input area",open=True) as primary_input_area:
+                with gr.Accordion("input area",open=True) as area_input_primary:
                     with gr.Row():
                         txt = gr.Textbox(show_label = False,placeholder = "Input Question here").style(container = False)
                     with gr.Row():
@@ -86,7 +86,7 @@ def main():
                             variant = functional[k]["Color"] if "Color" in functional[k] else "secondary"
                             functional[k]["Button"] = gr.Button(k, variant=variant)
 
-                with gr.Accordion("Tools functional area", open=True) as area_tool_fn:
+                with gr.Accordion("Tools functional area", open=True) as area_tools_fn:
                     with gr.Row():
                         gr.Markdown("Note: The function plug-ins identified by the \"red color\" below need to read the path from the input area as a parameter.")
                     with gr.Row():
@@ -111,15 +111,102 @@ def main():
                         with gr.Accordion("Click to expand the \"File Upload Area\". Uploading local files can be called by the red function plugin.", open=False) as area_file_upload:
                             file_upload = gr.Files(label="Any file, but uploading compressed files is recommended(zip, tar)", file_count="multiple")
 
-                
-                            
+                with gr.Accordion("Change Model & SysPrompt & Interface Layout", open=(LAYOUT == "TOP-DOWN")):
+                    system_prompt = gr.Textbox(show_label=True, placeholder=f"System Prompt", label="System prompt", value=initial_prompt)
+                    top_p = gr.Slider(minimum=-0, maximum=1.0, value=1.0, step=0.01,interactive=True, label="Top-p (nucleus sampling)",)
+                    temperature = gr.Slider(minimum=-0, maximum=2.0, value=1.0, step=0.01, interactive=True, label="Temperature",)
+                    max_length_sl = gr.Slider(minimum=256, maximum=4096, value=512, step=1, interactive=True, label="Local LLM MaxLength",)
+                    checkboxes = gr.CheckboxGroup(["Basic function area", "Function plug-in area", "Bottom input area", "Input clear key", "Plug-in parameter area"], value=["Basic function area", "Function plug-in area"], label = "Show/Hide Ribbon")
+                    md_dropdown = gr.Dropdown(AVAIL_LLM_MODELS, value=LLM_MODEL, label="Replace LLM model/request source").style(container=False)  
 
+                    gr.Markdown(description)
 
+                with gr.Accordion("Alternate input field",open = True, visible= False) as area_input_secondary:
+                    with gr.Row():
+                        txt2 = gr.Textbox(show_label=False, placeholder="Input question here.", label="input area 2").style(container=False)
+                    with gr.Row():
+                        submitBtn2 = gr.Button("submit", variant="primary")    
+                    with gr.Row():
+                        resetBtn2 = gr.Button("Reset", variant="secondary"); resetBtn2.style(size="sm")
+                        stopBtn2 = gr.Button("Stop", variant="secondary"); stopBtn2.style(size="sm")
+                        clearBtn2 = gr.Button("Clear", variant="secondary", visible=False); clearBtn2.style(size="sm")           
 
+        
+         #Ribbon Display Switch Interaction with Ribbon
 
         def fn_area_visibility(a):
             ret = {}
             ret.update({area_basic_fn : gr.update(visible =("Basic functional area" in a ))})
+            ret.update({area_tools_fn: gr.update(visible=("Tools Functions Area" in a))})
+            ret.update({area_input_primary: gr.update(visible=("Primary input area" not in a))})
+            ret.update({area_input_secondary: gr.update(visible=("Secondary input area" in a))})
+            ret.update({clearBtn: gr.update(visible=("input clear key" in a))})
+            ret.update({clearBtn2: gr.update(visible=("input clear key" in a))})
+            ret.update({plugin_advanced_arg: gr.update(visible=("Plug-in parameter area" in a))})
+            if "bottom input area" in a: ret.update({txt: gr.update(value="")})
+            return ret
+        
+        checkboxes.select(fn_area_visibility, [checkboxes], [area_basic_fn, area_tools_fn, area_input_primary ,area_input_secondary, txt, txt2, clearBtn, clearBtn2, plugin_advanced_arg] )   
+
+        #Clean up recurring control handle combinations
+        input_combo = [cookies, max_length_sl, md_dropdown, txt, txt2, top_p, temperature, chatbot, history, system_prompt, plugin_advanced_arg]
+        output_combo = [cookies, chatbot, history, status]
+        #calling the prediction function
+        predict_args = dict(fn=GenericArgsWrapper(predict), inputs=input_combo, outputs=output_combo)
+
+        #submit button, reset button
+        cancel_handles.append(txt.submit(**predict_args))
+        cancel_handles.append(txt2.submit(**predict_args))
+        cancel_handles.append(submitBtn.click(**predict_args))
+        cancel_handles.append(submitBtn2.click(**predict_args))
+        resetBtn.click(lambda: ([], [], "reset"), None, [chatbot, history, status])
+        resetBtn2.click(lambda: ([], [], "reset"), None, [chatbot, history, status])
+        clearBtn.click(lambda: ("",""), None, [txt, txt2])
+        clearBtn2.click(lambda: ("",""), None, [txt, txt2])  
+
+        #Callback function registration of the basic functional area
+        for k in functional:
+            click_handle = functional[k]["Button"].click(fn=GenericArgsWrapper(predict), inputs=[*input_combo, gr.State(True), gr.State(k)], outputs=output_combo)
+            cancel_handles.append(click_handle)      
+
+
+        file_upload.upload(on_file_uploaded, [file_upload, chatbot, txt, txt2, checkboxes], [chatbot, txt, txt2])   
+
+        #Function plugin - fixed button area
+        for k in tools:
+            if not tools[k].get("AsButton", True): continue
+            click_handle = tools[k]["Button"].click(GenericArgsWrapper(tools[k]["Function"]), [*input_combo, gr.State(PORT)], output_combo)
+            click_handle.then(on_report_generated, [file_upload, chatbot], [file_upload, chatbot])
+            cancel_handles.append(click_handle)    
+
+        #Function plugin - interaction between drop-down menu and variable button
+        def on_dropdown_changed(k):
+            variant = tools[k]["Color"] if "Color" in tools[k] else "secondary"
+            ret = {switchy_bt: gr.update(value=k, variant=variant)}
+            if tools[k].get("AdvancedArgs", False): # Whether to invoke the advanced plug-in parameter area
+                ret.update({plugin_advanced_arg: gr.update(visible=True,  label=f"插Explanation of advanced parameters for piece[{k}]:" + tools[k].get("ArgsReminder", [f"No description of advanced parameters is provided"]))})
+            else:
+                ret.update({plugin_advanced_arg: gr.update(visible=False, label=f"Plugins[{k}] do not require advanced parameters.")})
+            return ret
+        dropdown.select(on_dropdown_changed, [dropdown], [switchy_bt, plugin_advanced_arg] )
+
+        def on_md_dropdown_changed(k):
+            return {chatbot: gr.update(label="Current model:"+k)}
+        md_dropdown.select(on_md_dropdown_changed, [md_dropdown], [chatbot] )
+
+
+        # The callback function registration of the variable button
+        def route(k, *args, **kwargs):
+            if k in [r"Open the plugin list", r"Please select from the plugin list first"]: return
+            yield from GenericArgsWrapper(tools[k]["Function"])(*args, **kwargs)
+        click_handle = switchy_bt.click(route,[switchy_bt, *input_combo, gr.State(PORT)], output_combo)
+        click_handle.then(on_report_generated, [file_upload, chatbot], [file_upload, chatbot])
+        cancel_handles.append(click_handle)
+
+        # Callback function registration of the terminate button
+        stopBtn.click(fn=None, inputs=None, outputs=None, cancels=cancel_handles)
+        stopBtn2.click(fn=None, inputs=None, outputs=None, cancels=cancel_handles)        
+
 
     #Gradio's inbrowser trigger is not stable, roll back the code to the original browser opening function
     def auto_opentab_delay():
