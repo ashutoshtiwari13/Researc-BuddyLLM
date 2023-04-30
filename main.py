@@ -41,7 +41,48 @@ def main():
     from core_tools import get_core_tools
     tools = get_core_tools()
 
+    #Handling markdown text formatting changes
+    gr.Chatbot.postprocess = format_io
+
+    from check_proxy import check_proxy, auto_update, warm_up_modules
+    proxy_info = check_proxy(proxies)    
+
+    gr_L1 = lambda: gr.Row().style()
+    gr_L2 = lambda scale: gr.Column(scale=scale)
+    if LAYOUT == "TOP-DOWN":
+        gr_L1 = lambda: DummyWith()
+        gr_L2 = lambda scale: gr.Row()
+        CHATBOT_HEIGHT /= 2
     
+
+    cancel_handles =[]
+    with gr.Blocks(itle="Research Buddy LLM", analytics_enabled = False) as demo:
+        gr.HTML(title_html)
+
+        cookies = gr.State({'apy_key': API_KEY, 'llm_model':LLM_MODEL})
+        with gr.L1():
+            with gr.L2(scale=2):
+                chatbot = gr.Chatbot(label = f"Current Model : {LLM_MODEL}")
+                chatbot.style(height = CHATBOT_HEIGHT)
+                history = gr.State([])
+            with gr.L2(scale=1):
+                with gr.Accordion("input area",open=True) as primary_input_area:
+                    with gr.Row():
+                        txt = gr.Textbox(show_label = False,placeholder = "Input Question here").style(container = False)
+                    with gr.Row():
+                        submitBtn = gr.Button("Submit", variant = "Primary")
+
+                    with gr.Row():
+                        resetBtn = gr.Button("Reset", variant = "Secondary"); resetBtn.style(size="sm")
+                        StopBtn = gr.Button("Stop", variant = "Secondary");StopBtn.style(size="sm")
+                        ClearBtn = gr.Button("Clear", variant = "Secondary", visible = False);ClearBtn.style(size="sm")
+
+                    with gr.Row():
+                        status = gr.Markdonw(f"Tip: Press Enter to submit, press Shift+Enter to wrap. Current model: {LLM_MODEL} \n {proxy_info}")
+
+                        
+
+                    
 
 
 
