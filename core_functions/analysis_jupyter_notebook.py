@@ -23,7 +23,7 @@ class JupyterNotebookGroup():
         Preprocess long texts
         """
         for index,file_content in enumerate(self.file_contents):
-                if self.get_token_num(file_content) < max_token_limit:
+            if self.get_token_num(file_content) < max_token_limit:
                 self.sp_file_contents.append(file_content)
                 self.sp_file_index.append(index)
                 self.sp_file_tag.append(self.file_paths[index])

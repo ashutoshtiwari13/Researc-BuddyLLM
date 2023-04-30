@@ -34,8 +34,8 @@ def main():
     print("All inquiry records will be automatically saved in the local directory ./conversation_log/chat_secrets.log, please pay attention to self-privacy protection!")
 
     #get Core prompt function generator
-    from core_llm_functional import get_core_functions
-    functional = get_core_functions()
+    from core_llm_functional import get_core_llm_functions
+    functional = get_core_llm_functions()
 
     #get Custom applications
     from core_tools import get_core_tools
@@ -44,7 +44,7 @@ def main():
     #Handling markdown text formatting changes
     gr.Chatbot.postprocess = format_io
 
-    from check_proxy import check_proxy, auto_update, warm_up_modules
+    from utils.check_proxy import check_proxy, auto_update, warm_up_modules
     proxy_info = check_proxy(proxies)    
 
     gr_L1 = lambda: gr.Row().style()
@@ -60,12 +60,12 @@ def main():
         gr.HTML(title_html)
 
         cookies = gr.State({'apy_key': API_KEY, 'llm_model':LLM_MODEL})
-        with gr.L1():
-            with gr.L2(scale=2):
+        with gr_L1():
+            with gr_L2(scale=2):
                 chatbot = gr.Chatbot(label = f"Current Model : {LLM_MODEL}")
                 chatbot.style(height = CHATBOT_HEIGHT)
                 history = gr.State([])
-            with gr.L2(scale=1):
+            with gr_L2(scale=1):
                 with gr.Accordion("input area",open=True) as primary_input_area:
                     with gr.Row():
                         txt = gr.Textbox(show_label = False,placeholder = "Input Question here").style(container = False)
@@ -78,11 +78,75 @@ def main():
                         ClearBtn = gr.Button("Clear", variant = "Secondary", visible = False);ClearBtn.style(size="sm")
 
                     with gr.Row():
-                        status = gr.Markdonw(f"Tip: Press Enter to submit, press Shift+Enter to wrap. Current model: {LLM_MODEL} \n {proxy_info}")
+                        status = gr.Markdown(f"Tip: Press Enter to submit, press Shift+Enter to wrap. Current model: {LLM_MODEL} \n {proxy_info}")
 
-                        
+                with gr.Accordion("Basic functional area", open=True) as area_basic_fn:
+                    with gr.Row():
+                        for k in functional:
+                            variant = functional[k]["Color"] if "Color" in functional[k] else "secondary"
+                            functional[k]["Button"] = gr.Button(k, variant=variant)
 
-                    
+                with gr.Accordion("Tools functional area", open=True) as area_tool_fn:
+                    with gr.Row():
+                        gr.Markdown("Note: The function plug-ins identified by the \"red color\" below need to read the path from the input area as a parameter.")
+                    with gr.Row():
+                        for k in tools:
+                            if not tools[k].get("AsButton", True): continue
+                            variant = tools[k]["Color"] if "Color" in tools[k] else "secondary"
+                            tools[k]["Button"] = gr.Button(k, variant=variant)
+                            tools[k]["Button"].style(size="sm")                            
+                    with gr.Row():
+                        with gr.Accordion("More function plugins", open=True):
+                            dropdown_fn_list = [k for k in tools.keys() if not tools[k].get("AsButton", True)]
+                            with gr.Row():
+                                dropdown = gr.Dropdown(dropdown_fn_list, value=r"Open plugin list", label="").style(container=False)
+                            with gr.Row():
+                                plugin_advanced_arg = gr.Textbox(show_label=True, label="Advanced parameter input area", visible=False, 
+                                                                 placeholder="Here is the advanced parameter input area for the special function plugin").style(container=False)
+                            with gr.Row():
+                                switchy_bt = gr.Button(r"Please select from the plugin list first", variant="secondary")
+
+
+                    with gr.Row():
+                        with gr.Accordion("Click to expand the \"File Upload Area\". Uploading local files can be called by the red function plugin.", open=False) as area_file_upload:
+                            file_upload = gr.Files(label="Any file, but uploading compressed files is recommended(zip, tar)", file_count="multiple")
+
+                
+                            
+
+
+
+
+        def fn_area_visibility(a):
+            ret = {}
+            ret.update({area_basic_fn : gr.update(visible =("Basic functional area" in a ))})
+
+    #Gradio's inbrowser trigger is not stable, roll back the code to the original browser opening function
+    def auto_opentab_delay():
+        import threading, webbrowser, time
+        print(f"If your browser doesn't open automatically, copy and go to the following URL:")
+        print(f"\t（bright theme): http://localhost:{PORT}")
+        print(f"\t（dark theme): http://localhost:{PORT}/?__dark-theme=true")
+        def open():
+            time.sleep(2)       # open browser
+            DARK_MODE, = get_conf('DARK_MODE')
+            if DARK_MODE: webbrowser.open_new_tab(f"http://localhost:{PORT}/?__dark-theme=true")
+            else: webbrowser.open_new_tab(f"http://localhost:{PORT}")
+        threading.Thread(target=open, name="open-browser", daemon=True).start()
+        threading.Thread(target=auto_update, name="self-upgrade", daemon=True).start()
+        threading.Thread(target=warm_up_modules, name="warm-up", daemon=True).start()   
+
+    auto_opentab_delay()
+    demo.queue(concurrency_count=CONCURRENT_COUNT).launch(server_name="0.0.0.0", server_port=PORT, auth=AUTHENTICATION, favicon_path="logo.png")        
+
+
+    # If you need to run under the secondary path
+    # CUSTOM_PATH, = get_conf('CUSTOM_PATH')
+    # if CUSTOM_PATH != "/": 
+    #     from toolbox import run_gradio_in_subpath
+    #     run_gradio_in_subpath(demo, auth=AUTHENTICATION, port=PORT, custom_path=CUSTOM_PATH)
+    # else: 
+    #     demo.launch(server_name="0.0.0.0", server_port=PORT, auth=AUTHENTICATION, favicon_path="docs/logo.png")                
 
 
 

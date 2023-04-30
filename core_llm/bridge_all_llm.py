@@ -12,7 +12,7 @@ They will continue to call the lower-level LLM model to handle details such as m
 import tiktoken
 from functools import lru_cache
 from concurrent.futures import ThreadPoolExecutor
-from utils.functional_util import get_conf,trimmed_format_exc
+from utils.functional_utils import get_conf,trimmed_format_exc
 
 from .chatGPT_llm import predict_no_ui_long_connection as chatgpt_noui
 from .chatGPT_llm import predict as chatgpt_ui
@@ -53,8 +53,8 @@ except:
 if openai_endpoint in API_URL_REDIRECT: openai_endpoint = API_URL_REDIRECT[openai_endpoint]
 
 # get tokenizer
-tokenizer_gpt35 = LazyloadTiktoken("gpt-3.5-turbo")
-tokenizer_gpt4 = LazyloadTiktoken("gpt-4")
+tokenizer_gpt35 = LazyLoadTiktoken("gpt-3.5-turbo")
+tokenizer_gpt4 = LazyLoadTiktoken("gpt-4")
 get_token_num_gpt35 = lambda txt: len(tokenizer_gpt35.encode(txt, disallowed_special=()))
 get_token_num_gpt4 = lambda txt: len(tokenizer_gpt4.encode(txt, disallowed_special=()))
 

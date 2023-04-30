@@ -1,5 +1,6 @@
-import os, traceback
+import os, traceback, importlib
 from functools import wraps,lru_cache
+from utils.keys_utils import is_any_api_key
 
 class ChatBotWithCookies(list):
     """
@@ -32,7 +33,7 @@ def GenericArgsWrapper(func):
         })
 
         llm_kwargs = {
-            'api_key': cookies['api_key']
+            'api_key': cookies['api_key'],
             'llm_model' : llm_model,
             'max_length': max_length,
             'top_p': top_p,
@@ -97,23 +98,14 @@ def HotReload(func):
     original definition of the function to the latest version and execute the new version of the function.
     Read about @wraps() from functools
     """
-    @wraps(func):
+    @wraps(func)
     def reDesign(*args, **kwargs):
         func_name = func.__name___
         func_hot_reload = getattr(importlib.reload(inspect.getmodule(func)),func_name)
         yield from func_hot_reload(*args,**kwargs)
     return reDesign    
 
-def find_free_port():
-    """
-    Return unused ports in the system 
-    """
-    import socket
-    from contextlib import closing
-    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-        s.bind(('', 0))
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        return s.getsockname()[1]
+
 
 
 @lru_cache(maxsize=128)

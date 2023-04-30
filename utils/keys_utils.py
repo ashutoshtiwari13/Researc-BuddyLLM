@@ -1,3 +1,5 @@
+import re
+from latex2mathml.converter import convert as tex2mathml
 
 def is_openai_api_key(key):
     API_MATCH = re.match(r"sk-[a-zA-Z0-9]{48}$", key)

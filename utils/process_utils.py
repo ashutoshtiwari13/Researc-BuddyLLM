@@ -37,7 +37,7 @@ def write_results_to_file(history, file_name=None):
     import os
     import time
     if file_name is None:
-        file_name = 'Coversation_Report' +
+        file_name = 'Coversation_Report' + \
                            time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + '.md'
     os.makedirs('./conversation_log/',exist_ok =True)
 
@@ -362,3 +362,15 @@ class DummyWith():
 
     def __exit__(self, exc_type, exc_value, traceback):
         return
+
+
+def find_free_port():
+    """
+    Return unused ports in the system 
+    """
+    import socket
+    from contextlib import closing
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(('', 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return s.getsockname()[1]

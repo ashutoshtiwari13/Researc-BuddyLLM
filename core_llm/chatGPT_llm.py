@@ -21,7 +21,7 @@ import importlib
 # When reading, first check whether there is a private config_private configuration file (not controlled by git), if so, overwrite the original config file
 
 from utils.functional_utils import get_conf, updateUI,trimmed_format_exc
-from utils.keys.utils import is_any_api_key, select_api_key, what_keys
+from utils.keys_utils import is_any_api_key, select_api_key, what_keys
 from utils.process_utils import clip_history
 proxies, API_KEY, TIMEOUT_SECONDS, MAX_RETRY = \
     get_conf('proxies', 'API_KEY', 'TIMEOUT_SECONDS', 'MAX_RETRY')
